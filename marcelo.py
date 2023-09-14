@@ -109,22 +109,20 @@ with mp_holistic.Holistic(min_detection_confidence=0.8, min_tracking_confidence=
                         else:
                             puntosVisitante +=eventValue
                         engine.say(str(eventValue) + " para el " + eventName)
-                        #engine.runAndWait()
-                        
-                if eventType !="":
-                    messageStatus = currentMatchStatus + " Local: "  +str(puntosLocal)  + ", Visitante: " +str(puntosVisitante)  
-                    engine.say("Ahora " + messageStatus)
-                    engine.runAndWait()
+                        messageStatus = currentMatchStatus + " Local: "  +str(puntosLocal)  + ", Visitante: " +str(puntosVisitante)  
+                        engine.say("Ahora " + messageStatus)
+                        engine.runAndWait()    
+                    case "Amonestado":    
+                        engine.say("Jugador amonestado del equipo " + eventName  + ", camiseta Número " + str(eventValue))
+                        engine.runAndWait()
+                                   
+                    
                 #cv2.putText(flippedImage, mensaje , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-        
+            
 
-        else:
-            messageStatus = currentMatchStatus + " Local: "  +str(puntosLocal)  + " Visitante: " +str(puntosVisitante)  
-            v =1
-            #cv2.putText(flippedImage, " - " , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-            # Display Probability
         
-
+        messageStatus = currentMatchStatus + " Local: "  +str(puntosLocal)  + " Visitante: " +str(puntosVisitante)  
+        
         cv2.putText(flippedImage, messageStatus , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
 
         cv2.imshow('Raw Webcam Feed',flippedImage )

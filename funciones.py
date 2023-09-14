@@ -86,21 +86,23 @@ def getCurrentGesture(results):
 def getGestureValue(CurrentGesture,matchStatus):
     rightArm=CurrentGesture[1]
     team =CurrentGesture[0]
-    
+    rightHandValue=CurrentGesture[3]
+    lefttHandValue=CurrentGesture[4]
+
     if rightArm=="L":
         return ["","",0]
     if rightArm=="H":
-        rightHand=CurrentGesture[3]
-        if  rightHand == 0:
+        
+        if  rightHandValue == 0:
             return ["MatchStatus","Falta",0]
         
-        if  (matchStatus=="Falta") and rightHand >= 1 and rightHand <=2:
-            return ['Tanto',team,rightHand]
+        if  (matchStatus=="Falta") and rightHandValue >= 1 and rightHandValue <=2:
+            return ['Tanto',team,rightHandValue]
 
-        if  (matchStatus=="Jugando") and rightHand >= 2 and rightHand <=3:
-            return ['Tanto',team,rightHand]
+        if  (matchStatus=="Jugando") and rightHandValue >= 2 and rightHandValue <=3:
+            return ['Tanto',team,rightHandValue]
 
-        if  rightHand == 5:
+        if  rightHandValue == 5:
             match matchStatus:
                case "Falta":
                   return ['MatchStatus',"Jugando",0]
@@ -113,5 +115,8 @@ def getGestureValue(CurrentGesture,matchStatus):
                case _:
                   return ["","",0]
        
-    
+    if rightArm=="M":
+        if (matchStatus=="Falta"):
+            return ['Amonestado',team, rightHandValue + lefttHandValue]
+
     return ["","",0]
