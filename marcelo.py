@@ -7,12 +7,27 @@ import cv2 # Import opencv
 mp_drawing = mp.solutions.drawing_utils # Drawing helpers
 mp_holistic = mp.solutions.holistic # Mediapipe Solutions
 
+import pyttsx3
+engine = pyttsx3.init()
+voices =engine.getProperty('voices')
+    
+# Control the rate. Higher rate = more speed
+engine.setProperty("rate", 180)
+engine.setProperty('voice', voices[3].id)
+
+text = "bienvenido a foul, la aplicacion encargada de revolucionar la industria del basket"
+engine.say(text)
+engine.runAndWait()
+
 from funciones import *
-
-currentGesture =""          
-lastGesture =""
+currentGesture =["","","",0,0]          
+lastGesture =["","","",0,0]
 lastTime = int(time.time()*1000.0)
-
+lastPrintedGesture= ["","","",0,0]
+puntosLocal= 0 
+puntosVisitante=0
+messageStatus=""
+currentMatchStatus="No Comenzado"
 cap = cv2.VideoCapture(0)
 # Initiate holistic model
 with mp_holistic.Holistic(min_detection_confidence=0.8, min_tracking_confidence=0.8) as holistic:
@@ -62,21 +77,57 @@ with mp_holistic.Holistic(min_detection_confidence=0.8, min_tracking_confidence=
        # cv2.putText(image, 'CLASS', (95,12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
 
         
+        
         currentTime = int(time.time()*1000.0)
         currentGesture = getCurrentGesture(results)
+        flippedImage = cv2.flip(image, 1)
+        #print(currentGesture)
         if lastGesture != currentGesture:
             lastGesture = currentGesture
             lastTime = currentTime
 
         if currentTime - lastTime > 500 and currentGesture == lastGesture:
-            cv2.putText(image, currentGesture , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+            if currentGesture!=lastPrintedGesture:
+                lastPrintedGesture = currentGesture
+                mensaje="Equipo: "  + str(currentGesture[0]) + " BD: " + str(currentGesture[1])  + " BI: "  + str(currentGesture[2])  + " MD: "  +  str(currentGesture[3]) + " MI: "  +  str(currentGesture[4])
+                print(mensaje)
+                gestureValue = getGestureValue(currentGesture,currentMatchStatus)
+                eventType = gestureValue[0] 
+                eventName = gestureValue[1]
+                eventValue = gestureValue[2]
+                
+                match eventType:
+                    case "MatchStatus":
+                        currentMatchStatus = eventName
+                        engine.say(eventName)
+                        engine.runAndWait()
+
+                    case "Tanto":
+                        if eventName=="Local":    
+                            puntosLocal +=eventValue
+                    
+                        else:
+                            puntosVisitante +=eventValue
+                        engine.say(str(eventValue) + " para el " + eventName)
+                        #engine.runAndWait()
+                        
+                if eventType !="":
+                    messageStatus = currentMatchStatus + " Local: "  +str(puntosLocal)  + ", Visitante: " +str(puntosVisitante)  
+                    engine.say("Ahora " + messageStatus)
+                    engine.runAndWait()
+                #cv2.putText(flippedImage, mensaje , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+        
+
         else:
-            cv2.putText(image, " - " , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+            messageStatus = currentMatchStatus + " Local: "  +str(puntosLocal)  + " Visitante: " +str(puntosVisitante)  
+            v =1
+            #cv2.putText(flippedImage, " - " , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
             # Display Probability
         
 
+        cv2.putText(flippedImage, messageStatus , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
 
-        cv2.imshow('Raw Webcam Feed', cv2.flip(image, 1))
+        cv2.imshow('Raw Webcam Feed',flippedImage )
         
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
