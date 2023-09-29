@@ -6,6 +6,7 @@ import mediapipe as mp # Import mediapipe
 import time
 import cv2 # Import opencv
 import json
+import time
 
 mp_drawing = mp.solutions.drawing_utils # Drawing helpers
 mp_holistic = mp.solutions.holistic # Mediapipe Solutions
@@ -37,8 +38,9 @@ async def chat_receive():
     cap = cv2.VideoCapture(0)
     local="local"
     visitante="visitante"
-
-
+    startTime = time.time()
+    jugadosTotal=0
+    jugadoAhora=0
     msgReceived = False
     async with websockets.connect('ws://localhost:8000') as websocket:
         print("2")
@@ -55,9 +57,10 @@ async def chat_receive():
             text = f"bienvenido a foul, la aplicacion encargada de revolucionar la industria del basket {local} y {visitante}  "
             #engine.say(text)
             #engine.runAndWait()
-            await websocket.send(text)
+            sendMessage(text,websocket)
+            #await websocket.send(text)
             
-            response = await websocket.recv()
+            #response = await websocket.recv()
 
             with mp_holistic.Holistic(min_detection_confidence=0.8, min_tracking_confidence=0.8) as holistic:
                 
@@ -110,6 +113,12 @@ async def chat_receive():
                     currentTime = int(time.time()*1000.0)
                     currentGesture = getCurrentGesture(results)
                     flippedImage = cv2.flip(image, 1)
+                    
+                    nowTime = time.time()
+                    timeElapsed = nowTime - startTime
+                    
+                    #jugadosTotal= jugadosTotal+timeElapsed
+                    print(jugadoAhora)
                     #print(currentGesture)
                     if lastGesture != currentGesture:
                         lastGesture = currentGesture
@@ -127,43 +136,57 @@ async def chat_receive():
                             eventValue = gestureValue[2]
                             
                             match eventType:
+                                
+                               
+
                                 case "MatchStatus":
+                                    
                                     currentMatchStatus = eventName
-                                    #engine.say(eventName)
-                                    #engine.runAndWait()
-                                    await websocket.send(eventName)
-                                    response = await websocket.recv()
+                                    if currentMatchStatus=="Jugando":
+                                        startTime = time.time()
+                                    else:
+                                        jugadosTotal= jugadosTotal+timeElapsed
+
+                                    sendMessage(eventName,websocket)                       
+                                    #await websocket.send(eventName)
+                                    #response = await websocket.recv()
                                 case "Tanto":
+                                    
                                     if eventName=="Local":    
                                         puntosLocal +=eventValue
                                 
                                     else:
                                         puntosVisitante +=eventValue
                                     #engine.say(str(eventValue) + " para el " + eventName)
-                                    await websocket.send(str(eventValue) + " para el " + eventName)
-                                    response = await websocket.recv()
-                                    messageStatus = currentMatchStatus +  local+ ": " +str(puntosLocal)  + ","+ visitante +": " +str(puntosVisitante)  
-                                    await websocket.send(messageStatus)
-                                    response = await websocket.recv()
+                                    #await websocket.send(str(eventValue) + " para el " + eventName)
+                                    sendMessage(str(eventValue) + " para el " + eventName,websocket)
+                                    #response = await websocket.recv()
+                                    #messageStatus = currentMatchStatus +  local+ ": " +str(puntosLocal)  + ","+ visitante +": " +str(puntosVisitante)  
+                                    #await websocket.send(messageStatus)
+                                    #response = await websocket.recv()
                                     #engine.say("Ahora " + messageStatus)
                                     #engine.runAndWait()    
-                                case "Amonestado":    
+                                case "Amonestado":
+                                    
                                     if eventName=="Local":
                                         nombreEquipo=local
                                     else:
                                         nombreEquipo=visitante
                                     
-                                    await websocket.send("Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue))
-                                    response = await websocket.recv()
+                                    sendMessage("Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue),websocket)
+                                    #await websocket.send("Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue))
+                                    #response = await websocket.recv()
                                     #engine.say("Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue))
                                     #engine.runAndWait()
                                             
                                 
                             #cv2.putText(flippedImage, mensaje , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
                         
+                    if currentMatchStatus=="Jugando":
+                        jugadoAhora= jugadosTotal+timeElapsed
 
                     
-                    messageStatus = currentMatchStatus + local+ ": "  +str(puntosLocal)  + visitante +": " +str(puntosVisitante)  
+                    messageStatus = currentMatchStatus + local+ ": "  +str(puntosLocal)  + visitante +": " +str(puntosVisitante) + "tiempo Jugado: " + str(jugadoAhora)  + " - " +str(jugadosTotal)
                     
                     cv2.putText(flippedImage, messageStatus , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
 
