@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Chat Client</title>
+</head>
+<body>
+    <input type="text" id="local" placeholder="Nombre Equipo Local"><br/>
+    <input type="text" id="visitante" placeholder="Nombre Equipo Visitante"><br/>
+    <button type="submit" onclick="sendMessage()">Configurar</button>
+    <div id="chat"></div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:8000');
+        const msg = new SpeechSynthesisUtterance();
+        const speechSynthesis = window.speechSynthesis;
+
+// start speaking
+
+
+
+        socket.addEventListener('open', (event) => {
+            console.log('Connected to WebSocket server');
+        });
+
+        socket.addEventListener('message', (event) => {
+            const chat = document.getElementById('chat');
+            const message = document.createElement('p');
+            message.textContent = event.data;
+            msg.text =event.data;
+            speechSynthesis.speak(msg);
+            chat.appendChild(message);
+        });
+
+        function sendMessage() {
+            const local = document.getElementById('local').value;
+            const visitante = document.getElementById('visitante').value;
+            const message = {'local': local, 'visitante':visitante};
+            
+            socket.send(JSON.stringify(message));
+            setTimeout(
+                function() 
+                {
+                    const chat = document.getElementById('chat');
+                    chat.innerHTML="";
+                }, 1000
+            )
+            
+        }
+    </script>
+</body>
+</html>
