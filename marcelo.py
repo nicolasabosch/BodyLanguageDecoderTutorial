@@ -6,7 +6,8 @@ import mediapipe as mp # Import mediapipe
 import time
 import cv2 # Import opencv
 import json
-import time
+import datetime
+
 
 mp_drawing = mp.solutions.drawing_utils # Drawing helpers
 mp_holistic = mp.solutions.holistic # Mediapipe Solutions
@@ -52,12 +53,16 @@ async def chat_receive():
             json_obj = json.loads(response)
             local= json_obj["local"]
             visitante= json_obj["visitante"]
+           
             print(f"Received message: {response}")
             msgReceived =True
-            text = f"bienvenido a foul, la aplicacion encargada de revolucionar la industria del basket {local} y {visitante}  "
+            
+            json_obj["tiempoRestante"] ="10:00"
             #engine.say(text)
             #engine.runAndWait()
-            sendMessage(text,websocket)
+            json_obj["text"] = f"bienvenido a foul, la aplicacion encargada de revolucionar la industria del basket. Hoy jugarán: {local} y {visitante}  "
+            await sendMessage(json_obj,websocket)
+            json_obj["text"] =""
             #await websocket.send(text)
             
             #response = await websocket.recv()
@@ -118,7 +123,14 @@ async def chat_receive():
                     timeElapsed = nowTime - startTime
                     
                     #jugadosTotal= jugadosTotal+timeElapsed
-                    print(jugadoAhora)
+                    #print(jugadoAhora)
+                    m, s = divmod(int(600-jugadoAhora), 60)
+                    h, m = divmod(m, 60)
+                    
+                    json_obj["tiempoRestante"] =f'{m:02d}:{s:02d}'
+                    await sendMessage(json_obj,websocket)
+                    #print (json_obj["tiempoRestante"])
+                    
                     #print(currentGesture)
                     if lastGesture != currentGesture:
                         lastGesture = currentGesture
@@ -147,7 +159,9 @@ async def chat_receive():
                                     else:
                                         jugadosTotal= jugadosTotal+timeElapsed
 
-                                    sendMessage(eventName,websocket)                       
+                                    json_obj["text"] =eventName
+                                    await sendMessage(json_obj,websocket)                       
+                                    json_obj["text"] =""
                                     #await websocket.send(eventName)
                                     #response = await websocket.recv()
                                 case "Tanto":
@@ -159,7 +173,10 @@ async def chat_receive():
                                         puntosVisitante +=eventValue
                                     #engine.say(str(eventValue) + " para el " + eventName)
                                     #await websocket.send(str(eventValue) + " para el " + eventName)
-                                    sendMessage(str(eventValue) + " para el " + eventName,websocket)
+
+                                    json_obj["text"] =str(eventValue) + " para el " + eventName
+                                    await sendMessage(json_obj,websocket)                       
+                                    json_obj["text"] =""
                                     #response = await websocket.recv()
                                     #messageStatus = currentMatchStatus +  local+ ": " +str(puntosLocal)  + ","+ visitante +": " +str(puntosVisitante)  
                                     #await websocket.send(messageStatus)
@@ -173,7 +190,11 @@ async def chat_receive():
                                     else:
                                         nombreEquipo=visitante
                                     
-                                    sendMessage("Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue),websocket)
+                                                         
+                                    json_obj["text"] ="Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue)                                                         
+
+                                    await sendMessage( json_obj,websocket)
+                                    json_obj["text"] =""
                                     #await websocket.send("Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue))
                                     #response = await websocket.recv()
                                     #engine.say("Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue))

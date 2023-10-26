@@ -4,7 +4,8 @@ import asyncio
 async def sendMessage(message,websocket):
      if websocket.closed:
           websocket = await websockets.connect('ws://localhost:8000')
-     await websocket.send(message)
+     await websocket.send(str(message))
+     print(str(message))
      await websocket.recv()
 
 
