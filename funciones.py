@@ -5,7 +5,7 @@ async def sendMessage(message,websocket):
      if websocket.closed:
           websocket = await websockets.connect('ws://localhost:8000')
      await websocket.send(str(message))
-     print(str(message))
+     #print(str(message))
      await websocket.recv()
 
 
@@ -80,9 +80,9 @@ def Side(results):
             #print(orejaDerecha)
             
             if orejaDerecha > orejaIzquierda:
-                return "Local"
+                return "local"
             else:
-               return 'Visitante'
+               return 'visitante'
                 
 def getCurrentGesture(results):
     if results is None:
@@ -105,7 +105,7 @@ def getGestureValue(CurrentGesture,matchStatus):
         if  rightHandValue == 0:
             return ["MatchStatus","Falta",0]
         
-        if  (matchStatus=="Falta") and rightHandValue >= 1 and rightHandValue <=2:
+        if  (matchStatus=="Esperando") and rightHandValue >= 1 and rightHandValue <=2:
             return ['Tanto',team,rightHandValue]
 
         if  (matchStatus=="Jugando") and rightHandValue >= 2 and rightHandValue <=3:
@@ -115,6 +115,8 @@ def getGestureValue(CurrentGesture,matchStatus):
             match matchStatus:
                case "Falta":
                   return ['MatchStatus',"Jugando",0]
+               case "Esperando":
+                  return ['MatchStatus',"Jugando",0]
                case "No Comenzado":
                   return ['MatchStatus',"Jugando",0]
                case "Playing":
@@ -122,7 +124,9 @@ def getGestureValue(CurrentGesture,matchStatus):
                case "Pausado":
                   return ['MatchStatus',"Jugando",0]
                case _:
-                  return ["","",0]
+                  
+                  return ["MatchStatus","Desconocido",0]
+                
        
     if rightArm=="M":
         if (matchStatus=="Falta"):

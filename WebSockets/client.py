@@ -15,7 +15,7 @@ visitante="xxvisitante"
 
 async def chat_receive():
     msgReceived = False
-    async with websockets.connect('ws://localhost:8000') as websocket:
+    async with websockets.connect('ws://localhot:8000') as websocket:
         while msgReceived ==False:
             #message = input("Enter message: ")
             #await websocket.send(message)
