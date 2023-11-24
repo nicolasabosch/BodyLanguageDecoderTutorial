@@ -34,7 +34,8 @@ async def chat_receive():
     lastGesture =["","","",0,0]
     lastTime = int(time.time()*1000.0)
     lastPrintedGesture= ["","","",0,0]
-    puntosLocal= 0 
+    puntosLocal= 0
+    tiempoRestante="10:00"
     puntosVisitante=0
     messageStatus=""
     currentMatchStatus="No Comenzado"
@@ -43,8 +44,8 @@ async def chat_receive():
     jugadosTotal=0
     jugadoAhora=0
     msgReceived = False
-    async with websockets.connect("ws://localhost:8000") as websocket:
-    #async with websockets.connect("ws://172.174.204.46:8000") as websocket:
+    #async with websockets.connect("ws://localhost:8000") as websocket:
+    async with websockets.connect("ws://172.174.204.46:8000") as websocket:
         print("Esperando configuración del partido")
         while msgReceived ==False:
             
@@ -60,7 +61,7 @@ async def chat_receive():
             json_obj["puntosLocal"]=puntosLocal
             json_obj["puntosVisitante"]=puntosVisitante
 
-            json_obj["tiempoRestante"] ="10:00"
+            json_obj["tiempoRestante"] = tiempoRestante
             json_obj["text"] = f"bienvenido a foul, la aplicacion revolucionaria del basket. Hoy jugarán: {local} y {visitante}  "
             await sendMessage(json_obj,websocket)
             json_obj["text"] =""
@@ -102,8 +103,15 @@ async def chat_receive():
                     m, s = divmod(int(600-jugadoAhora), 60)
                     h, m = divmod(m, 60)
                     
-                    json_obj["tiempoRestante"] =f'{m:02d}:{s:02d}'
-                    await sendMessage(json_obj,websocket)
+                    tr = f'{m:02d}:{s:02d}'
+
+                    if tiempoRestante != tr:
+                        tiempoRestante = tr
+                        json_obj["tiempoRestante"] =tr
+                        x = '{ "tiempoRestante":"' +tr + '"}'
+                        js = json.loads(x)
+                        # await sendMessage(js,websocket)
+                        await sendMessage(json_obj,websocket)
 
                     if lastGesture != currentGesture:
                         lastGesture = currentGesture
@@ -149,19 +157,23 @@ async def chat_receive():
                                    
                                 case "Amonestado":
                                     currentMatchStatus="Esperando"
+                                    nombreJugador =""
                                     if eventName=="local":
                                         nombreEquipo=local
                                         
                                         for item in json_obj["localJugadores"]:
                                             if item["Camiseta"] == eventValue:
+                                                nombreJugador = item["Nombre"]
                                                 item["Faltas"]=item["Faltas"]+1
                                     else:
                                         nombreEquipo=visitante
                                         for item in json_obj["visitanteJugadores"]:
                                             if item["Camiseta"] == eventValue:
+                                                nombreJugador = item["Nombre"]
+
                                                 item["Faltas"]=item["Faltas"]+1
                                                
-                                    json_obj["text"] ="Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue)                                                         
+                                    json_obj["text"] ="Jugador amonestado del equipo " + nombreEquipo  + ", camiseta Número " + str(eventValue) + " llamado " + nombreJugador                                                       
                                     await sendMessage( json_obj,websocket)
                                     json_obj["text"] =""
                                     
@@ -169,7 +181,7 @@ async def chat_receive():
                         jugadoAhora= jugadosTotal+timeElapsed
                     json_obj["currentMatchStatus"] = currentMatchStatus
 
-                    messageStatus = currentMatchStatus + local + ": "  +str(puntosLocal)  + visitante +": " +str(puntosVisitante) + "tiempo Jugado: " + str(jugadoAhora)  + " - " +str(jugadosTotal)
+                    messageStatus = currentMatchStatus + local + ": "  +str(puntosLocal)  + visitante +": " +str(puntosVisitante) + "tiempo Jugado: " + tiempoRestante #str(jugadoAhora)  + " - " +str(jugadosTotal)
                     cv2.putText(flippedImage, messageStatus , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
                     cv2.imshow('Raw Webcam Feed',flippedImage )
                     

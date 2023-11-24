@@ -5,6 +5,7 @@ import asyncio
 import websockets
 from websockets.legacy.client import connect as ws_connect
 
+
 # create a dictionary to store connected clients
 clients = {}
 
