@@ -8,7 +8,6 @@ import cv2 # Import opencv
 import json
 
 
-
 mp_drawing = mp.solutions.drawing_utils # Drawing helpers
 mp_holistic = mp.solutions.holistic # Mediapipe Solutions
 
@@ -44,8 +43,10 @@ async def chat_receive():
     jugadosTotal=0
     jugadoAhora=0
     msgReceived = False
-    #async with websockets.connect("ws://localhost:8000") as websocket:
-    async with websockets.connect("ws://172.174.204.46:8000") as websocket:
+    
+    async with websockets.connect("ws://localhost:8000") as websocket:
+    #async with websockets.connect("ws://172.174.204.46:8000") as websocket:
+
         print("Esperando configuración del partido")
         while msgReceived ==False:
             

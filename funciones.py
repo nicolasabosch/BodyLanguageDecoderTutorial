@@ -1,14 +1,19 @@
 
 import websockets
 import asyncio
+import ssl
 async def sendMessage(message,websocket):
-     if websocket.closed:
-        websocket = await websockets.connect('ws://172.174.204.46:8000')
-      #websocket = await websockets.connect('ws://localhost:8000')
+   ssl_context = ssl.create_default_context()
+   ssl_context.check_hostname = False
+   ssl_context.verify_mode = ssl.CERT_NONE
 
-     await websocket.send(str(message))
+   if websocket.closed:
+      #websocket = await websockets.connect('ws://172.174.204.46:8000')
+      websocket = await websockets.connect('ws://localhost:8000')
+
+   await websocket.send(str(message))
      #print(str(message))
-     await websocket.recv()
+   await websocket.recv()
 
 
 def rightHand (results):
@@ -44,7 +49,7 @@ def leftHand (results):
         suma +=1        
      if results.left_hand_landmarks.landmark[7].y > results.left_hand_landmarks.landmark[8].y: 
         suma +=1           
-     if results.left_hand_landmarks.landmark[4].x > results.left_hand_landmarks.landmark[5].x: 
+     if results.left_hand_landmarks.landmark[4].x < results.left_hand_landmarks.landmark[5].x: 
         suma +=1               
 
      return suma
@@ -127,7 +132,7 @@ def getGestureValue(CurrentGesture,matchStatus):
                   return ['MatchStatus',"Jugando",0]
                case _:
                   
-                  return ["MatchStatus","Desconocido",0]
+                  return ["MatchStatus","Pausado",0]
                 
        
     if rightArm=="M":
